@@ -1,0 +1,95 @@
+{% include "svm/header.html" %}
+
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <div class="alert alert-{{message.level_tag}} alert-dismissible">
+        <a href="" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+        <a {% if message.tags %} class="{{ message.tags }}" {% endif %}> <strong>{{ message.tags |title }}!</strong>
+            {{ message }}</a>
+    </div>
+    {% endfor %}
+</ul>
+{% endif %}
+
+
+<body>
+
+    <!-- Page Content -->
+    <div class="container ">
+
+        <div class="row">
+
+            <div class="col-lg-3">
+                {% include "svm/controller.html" %}
+            </div>
+            <!-- /.col-lg-3 -->
+
+            <div class="col-lg-9">
+
+                <form action="" method="post">
+                    {% csrf_token %}
+                    <label>Paste path to dataset in your computer:</label>
+                    <input type="text" class="form-control" onfocus="this.value=''" name="dataset_path">
+                    <input type="submit" class="btn btn-primary" value="Read Dataset">
+                </form>
+
+
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <h3 class="card-title">Information of your dataset</h3>
+                    </div>
+                </div>
+                <!-- /.card -->
+
+                <div class="row">
+
+                    <div class="col-lg-6">
+                        <div class="card  card-outline-secondary my-4">
+                            <div class="card-header bg-info text-white">
+                                Classes
+                            </div>
+                            <div class="card-body">
+                                <p>Number: {{ label_nums }}</p>
+                                {% for label in labels %}
+                                <p>
+                                    <td> {{ label.label_name }} </td>
+                                    <td>: id {{ label.id }} </td>
+                                </p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="card card-outline-secondary my-4">
+                            <div class="card-header bg-info text-white">
+                                Images
+                            </div>
+                            <div class="card-body">
+                                <p>Number: {{ image_nums }}</p>
+                                {% for key, value in image_count_by_label.items %}
+                                <p>
+                                    <td> {{ key }} </td>
+                                    <td>: {{ value }} images</td>
+                                </p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- /.card -->
+
+        </div>
+        <!-- /.col-lg-9 -->
+
+    </div>
+
+    </div>
+    <!-- /.container -->
+
+</body>
+
+</html>
