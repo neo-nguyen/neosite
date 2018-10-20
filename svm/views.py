@@ -1,12 +1,14 @@
 from django.shortcuts import render
 from pathlib import Path
-from svm.models import Label, Dataset, Image
+from svm.models import Label, Dataset, Image, Picture
 from django.http import HttpResponse
 import os
 from django.db.models import Count
 from django.db import transaction
 from django.db import connection
 from django.contrib import messages
+from .form import PictureUploadForm
+from django.template import RequestContext
 
 
 # Create your views here.
@@ -100,7 +102,7 @@ def read_dataset(dataset_path):
 
 
 def dataset_info(request):
-    if(request.POST.get('dataset_path')):
+    if (request.POST.get('dataset_path')):
         dataset_path = request.POST['dataset_path']
         # validate path -> if ok ->
         read_dataset(dataset_path)
@@ -123,3 +125,30 @@ def dataset_info(request):
     }
 
     return render(request, 'svm/dataset_info.html', context)
+
+
+def upload_picture(request):
+    if request.method == "POST":
+        # Get the posted form
+        form = PictureUploadForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            picture = Picture()
+            picture.picture = form.cleaned_data["picture"]
+            picture.save()
+            messages.success(request, 'Save picture successfully!')
+        else:
+            messages.error(request, 'Save picture fail!')
+    else:
+        form = PictureUploadForm()
+
+    return render(request, 'svm/upload_picture.html', locals())
+
+
+"""show 1 picture"""
+
+
+def show_picture(request):
+    picture = Picture.objects.filter().latest('id')
+
+    return render(request, 'svm/show_picture.html', {'picture_url': picture.picture.url})
