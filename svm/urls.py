@@ -11,6 +11,8 @@ urlpatterns = [
     path('create-images/', views.create_images, name='create_images'),
     path('dataset-info/', views.dataset_info, name='dataset_info'),
     path('upload/', views.upload_picture, name='upload_picture'),
+    path('dataset-info/upload/', views.upload_picture, name='upload_picture'),
+
     path('show-picture/', views.show_picture, name='show_picture'),
 
 

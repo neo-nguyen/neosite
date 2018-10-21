@@ -10,6 +10,8 @@ from django.contrib import messages
 from .form import PictureUploadForm
 from django.template import RequestContext
 
+from . import myprocess as mp
+
 
 # Create your views here.
 
@@ -17,7 +19,7 @@ my_dataset_path = '/media/xuantoan/Data1/CNTT/LV/Dataset/data-example'
 
 
 def index(request):
-    return HttpResponse("Welcome my svm!")
+    return HttpResponse("Welcome my app!")
 
 
 """from a valid dataset_path
@@ -121,13 +123,15 @@ def dataset_info(request):
         'label_nums': label_nums,
         'image_nums': image_nums,
         'image_count_by_label': image_count_by_label,
-
     }
 
     return render(request, 'svm/dataset_info.html', context)
 
 
 def upload_picture(request):
+    Picture.objects.all().delete()
+
+    # save uploaded image
     if request.method == "POST":
         # Get the posted form
         form = PictureUploadForm(request.POST, request.FILES)
@@ -136,13 +140,33 @@ def upload_picture(request):
             picture = Picture()
             picture.picture = form.cleaned_data["picture"]
             picture.save()
-            messages.success(request, 'Save picture successfully!')
-        else:
-            messages.error(request, 'Save picture fail!')
+        #     messages.success(request, 'Save picture successfully!')
+        # else:
+        #     messages.error(request, 'Save picture fail!')
     else:
         form = PictureUploadForm()
 
-    return render(request, 'svm/upload_picture.html', locals())
+    # predict for 1 uploaded image
+    if Picture.objects.count() != 0:
+        picture = Picture.objects.filter().latest('id')
+        picture_url = picture.picture.url
+        des = mp.feature_extract(picture_url)
+        loaded_kmeans = mp.load_kmeans()
+        his = mp.create_histogram(des, loaded_kmeans)
+        loaded_svm = mp.load_svm()
+
+        # cong 1 de giong voi index khi train tren jupyter
+        label_id = loaded_svm.predict(his.reshape(1, -1)) + 1
+        label = Label.objects.get(id=label_id)
+
+        context = {
+            'picture_url': picture_url,
+            'label_predict': label.label_name,
+        }
+
+        return render(request, 'svm/upload_picture.html', context)
+    else:
+        return render(request, 'svm/upload_picture.html')
 
 
 """show 1 picture"""
@@ -150,5 +174,19 @@ def upload_picture(request):
 
 def show_picture(request):
     picture = Picture.objects.filter().latest('id')
+    picture_url = picture.picture.url
+    des = mp.feature_extract(picture_url)
+    loaded_kmeans = mp.load_kmeans()
+    his = mp.create_histogram(des, loaded_kmeans)
+    loaded_svm = mp.load_svm()
 
-    return render(request, 'svm/show_picture.html', {'picture_url': picture.picture.url})
+
+    label_id = loaded_svm.predict(his.reshape(1, -1))
+    label = Label.objects.get(id=label_id)
+
+    context = {
+        'picture_url': picture_url,
+        'label_predict': label.label_name,
+    }
+
+    return render(request, 'svm/show_picture.html', context)
