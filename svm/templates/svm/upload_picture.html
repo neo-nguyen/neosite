@@ -33,28 +33,29 @@
                         <div style="max-width:470px;">
                             <input type="file" placeholder="Picture" name="picture" />
                         </div>
-                        
+
                         <br>
 
                         <div style="max-width:470px;">
-                            <input type="submit" class="btn btn-success btn-lg fa" value="Upload">
+                            <input type="submit" class="btn btn-success btn-lg fa" value="Upload & Predict">
                         </div>
-
                     </form>
                 </div>
 
-
                 <div class="card mt-4">
                     <div class="card-body">
-                        <img src="{{ MEDIA_URL }}{{ picture_url }}" width="300px" alt="img">
+                        <p>Path of image: {{ picture_url }}</p>
                         <hr>
-                        <h3><span class="badge badge-pill badge-info">{{ label_predict }}</span></h3>
+                        <img src="{{ MEDIA_URL }}{{ picture_url }}" height="250" alt="No Image">
+                        <hr>
+                        <p>Predicted class: {{ label_predict }}</p>
+                        <hr>
+                        <p>Real name of class:</p>
+                        <h2><span class="badge badge-pill badge-danger">{{ real_label_name }}</span></h2>
                     </div>
                 </div>
 
-
             </div>
-
             <!-- /.card -->
 
         </div>

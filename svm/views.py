@@ -22,6 +22,29 @@ def index(request):
     return HttpResponse("Welcome my app!")
 
 
+"""replace name label"""
+
+
+def replace_label_name(old_name):
+    replace = {
+        'n11632167': 'Monterey cypress',
+        'n11709205': 'Star anise',
+        'n09288635': 'Geyser',
+        'n04051439': 'Rammer',
+        'n03819448': 'Nest egg',
+        'n03272125': 'Electric hammer',
+        'n03124590': 'Cow pen',
+        'n02927887': 'Butterfly valve',
+        'n02794008': 'Barograph',
+        'n00451186': 'Cross country riding',
+    }
+
+    if replace[old_name]:
+        return replace[old_name]
+    else:
+        return old_name
+
+
 """from a valid dataset_path
 read names of label -> add to DB"""
 
@@ -32,7 +55,8 @@ def create_labels(dataset_path):
     if subdirs:
         Label.objects.all().delete()
         for subdir in subdirs:
-            label = Label(label_name=subdir.parts[-1])
+            label_name = subdir.parts[-1]
+            label = Label(label_name=label_name)
             label.save()
 
 
@@ -111,12 +135,16 @@ def dataset_info(request):
         messages.success(request, 'Read dataset successfully!')
 
     labels, label_nums = Label.objects.all(), Label.objects.count()
+
     image_nums = Image.objects.count()
 
     image_count = Label.objects.annotate(num_images=Count('image'))
+
+    # build a dic {label name: num image}
     image_count_by_label = {}
     for i in range(len(image_count)):
-        image_count_by_label[image_count[i]] = image_count[i].num_images
+        image_count_by_label[replace_label_name(
+            image_count[i].label_name)] = image_count[i].num_images
 
     context = {
         'labels': labels,
@@ -162,6 +190,7 @@ def upload_picture(request):
         context = {
             'picture_url': picture_url,
             'label_predict': label.label_name,
+            'real_label_name': replace_label_name(label.label_name),
         }
 
         return render(request, 'svm/upload_picture.html', context)
@@ -179,7 +208,6 @@ def show_picture(request):
     loaded_kmeans = mp.load_kmeans()
     his = mp.create_histogram(des, loaded_kmeans)
     loaded_svm = mp.load_svm()
-
 
     label_id = loaded_svm.predict(his.reshape(1, -1))
     label = Label.objects.get(id=label_id)

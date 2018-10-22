@@ -28,3 +28,7 @@ class Image(models.Model):
 class Picture(models.Model):
     picture = models.ImageField(upload_to='pictures')
 
+
+
+    
+    

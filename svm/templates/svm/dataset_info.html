@@ -21,7 +21,6 @@
                     <input type="submit" class="btn btn-success btn-lg fa" value="Input Dataset">
                 </form>
 
-
                 <div class="card mt-4">
                     <div class="card-body">
                         <h3 class="card-title">Information of your dataset</h3>
@@ -31,39 +30,30 @@
 
                 <div class="row">
 
-                    <div class="col-lg-6">
-                        <div class="card  card-outline-secondary my-4">
-                            <div class="card-header bg-info text-white">
-                                Classes
-                            </div>
-                            <div class="card-body">
-                                <p>Number: {{ label_nums }}</p>
-                                {% for label in labels %}
-                                <p>
-                                    <td> {{ label.label_name }} </td>
-                                    <td>: id {{ label.id }} </td>
-                                </p>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr class="bg-info text-white">
+                                <th scope="col">Class Name</th>
+                                <th scope="col">Num Images</th>
+                            </tr>
+                        </thead>
 
-                    <div class="col-lg-6">
-                        <div class="card card-outline-secondary my-4">
-                            <div class="card-header bg-info text-white">
-                                Images
-                            </div>
-                            <div class="card-body">
-                                <p>Number: {{ image_nums }}</p>
-                                {% for key, value in image_count_by_label.items %}
-                                <p>
-                                    <td> {{ key }} </td>
-                                    <td>: {{ value }} images</td>
-                                </p>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
+                        <tbody>
+                            {% for key, value in image_count_by_label.items %}
+                            <tr>
+                                <td>{{ key }}</td>
+                                <td>{{ value }}</td>
+                            </tr>
+                            {% endfor %}
+
+                            <tr>
+                                <td>Num class: {{ label_nums }}</td>
+                                <td>Num image: {{ image_nums }}</td>
+                            </tr>
+                        </tbody>
+
+                    </table>
+
                 </div>
             </div>
 

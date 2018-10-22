@@ -36,7 +36,7 @@ load the kmeans from disk
 
 
 def load_kmeans():
-    path = 'flower1-kmeans-10000.sav'
+    path = 'imagenet-v2-300-kmeans-25000.sav'
     loaded_kmeans = joblib.load(path)
     return loaded_kmeans
 
@@ -48,7 +48,7 @@ return ndarray 1D len = k
 
 
 def create_histogram(des, kmeans):
-    k = 10000
+    k = 25000
     his = np.zeros(k)
     if des is not None:
         for f in des:
@@ -62,6 +62,6 @@ load the model from disk
 
 
 def load_svm():
-    path = 'flower1-svm-10000.sav'
+    path = 'imagenet-v2-300-svm-25000.sav'
     loaded_svm = joblib.load(path)
     return loaded_svm
