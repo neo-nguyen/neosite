@@ -22,29 +22,6 @@ def index(request):
     return HttpResponse("Welcome my app!")
 
 
-"""replace name label"""
-
-
-def replace_label_name(old_name):
-    replace = {
-        'n11632167': 'Monterey cypress',
-        'n11709205': 'Star anise',
-        'n09288635': 'Geyser',
-        'n04051439': 'Rammer',
-        'n03819448': 'Nest egg',
-        'n03272125': 'Electric hammer',
-        'n03124590': 'Cow pen',
-        'n02927887': 'Butterfly valve',
-        'n02794008': 'Barograph',
-        'n00451186': 'Cross country riding',
-    }
-
-    if replace[old_name]:
-        return replace[old_name]
-    else:
-        return old_name
-
-
 """from a valid dataset_path
 read names of label -> add to DB"""
 
@@ -138,13 +115,13 @@ def dataset_info(request):
 
     image_nums = Image.objects.count()
 
+    # return list[label and count images by label]
     image_count = Label.objects.annotate(num_images=Count('image'))
 
     # build a dic {label name: num image}
     image_count_by_label = {}
     for i in range(len(image_count)):
-        image_count_by_label[replace_label_name(
-            image_count[i].label_name)] = image_count[i].num_images
+        image_count_by_label[image_count[i].description] = image_count[i].num_images
 
     context = {
         'labels': labels,
@@ -156,11 +133,13 @@ def dataset_info(request):
     return render(request, 'svm/dataset_info.html', context)
 
 
-def upload_picture(request):
-    Picture.objects.all().delete()
+"""upload and predict for 1 img"""
 
-    # save uploaded image
+
+def upload_picture(request):
+    # save uploaded image by post method
     if request.method == "POST":
+        Picture.objects.all().delete()
         # Get the posted form
         form = PictureUploadForm(request.POST, request.FILES)
 
@@ -168,53 +147,58 @@ def upload_picture(request):
             picture = Picture()
             picture.picture = form.cleaned_data["picture"]
             picture.save()
-        #     messages.success(request, 'Save picture successfully!')
-        # else:
-        #     messages.error(request, 'Save picture fail!')
+
+        if Picture.objects.count() != 0:
+            picture = Picture.objects.filter().latest('id')
+            picture_url = picture.picture.url
+
+            context = {
+                'picture_url': picture_url,
+            }
+
+            return render(request, 'svm/upload_picture.html', context)
+        else:
+            return render(request, 'svm/upload_picture.html')
+
     else:
         form = PictureUploadForm()
 
-    # predict for 1 uploaded image
-    if Picture.objects.count() != 0:
-        picture = Picture.objects.filter().latest('id')
-        picture_url = picture.picture.url
-        des = mp.feature_extract(picture_url)
-        loaded_kmeans = mp.load_kmeans()
-        his = mp.create_histogram(des, loaded_kmeans)
-        loaded_svm = mp.load_svm()
+    # predict for 1 uploaded image by get method
+    if request.method == "GET":
+        if Picture.objects.count() != 0:
+            picture = Picture.objects.filter().latest('id')
+            picture_url = picture.picture.url
+            des = mp.feature_extract(picture_url)
+            loaded_kmeans = mp.load_kmeans()
+            his = mp.create_histogram(des, loaded_kmeans)
+            loaded_svm = mp.load_svm()
 
-        # cong 1 de giong voi index khi train tren jupyter
-        label_id = loaded_svm.predict(his.reshape(1, -1)) + 1
-        label = Label.objects.get(id=label_id)
+            # cong 1 de giong voi index khi train tren jupyter
+            label_id = loaded_svm.predict(his.reshape(1, -1)) + 1
+            label = Label.objects.get(id=label_id)
 
-        context = {
-            'picture_url': picture_url,
-            'label_predict': label.label_name,
-            'real_label_name': replace_label_name(label.label_name),
-        }
+            context = {
+                'picture_url': picture_url,
+                'label_predict': label.label_name,
+                'label_description': label.description,
+            }
 
-        return render(request, 'svm/upload_picture.html', context)
-    else:
-        return render(request, 'svm/upload_picture.html')
+            Picture.objects.all().delete()
+
+            return render(request, 'svm/upload_picture.html', context)
+        else:
+            return render(request, 'svm/upload_picture.html')
 
 
-"""show 1 picture"""
+"""show each class 1 random img"""
 
 
 def show_picture(request):
-    picture = Picture.objects.filter().latest('id')
-    picture_url = picture.picture.url
-    des = mp.feature_extract(picture_url)
-    loaded_kmeans = mp.load_kmeans()
-    his = mp.create_histogram(des, loaded_kmeans)
-    loaded_svm = mp.load_svm()
-
-    label_id = loaded_svm.predict(his.reshape(1, -1))
-    label = Label.objects.get(id=label_id)
+    img = Image()
+    imgs = img.get_random_per_label()
 
     context = {
-        'picture_url': picture_url,
-        'label_predict': label.label_name,
+        'imgs': imgs,
     }
 
     return render(request, 'svm/show_picture.html', context)

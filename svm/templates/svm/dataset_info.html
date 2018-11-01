@@ -14,6 +14,12 @@
 
             <div class="col-lg-9">
 
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <h3 class="card-title">Information of your dataset</h3>
+                    </div>
+                </div>
+
                 <form action="" method="post">
                     {% csrf_token %}
                     <label class="text-light bg-success">Paste path to dataset in your computer:</label>
@@ -21,15 +27,9 @@
                     <input type="submit" class="btn btn-success btn-lg fa" value="Input Dataset">
                 </form>
 
-                <div class="card mt-4">
-                    <div class="card-body">
-                        <h3 class="card-title">Information of your dataset</h3>
-                    </div>
-                </div>
                 <!-- /.card -->
 
-                <div class="row">
-
+                <div class="card mt-12">
                     <table class="table table-striped">
                         <thead>
                             <tr class="bg-info text-white">
@@ -51,10 +51,9 @@
                                 <td>Num image: {{ image_nums }}</td>
                             </tr>
                         </tbody>
-
                     </table>
-
                 </div>
+
             </div>
 
             <!-- /.card -->

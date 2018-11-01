@@ -27,32 +27,44 @@
             <div class="col-lg-9">
 
                 <div class="card mt-4">
-                    <form name="form" enctype="multipart/form-data" action="" method="POST">
-                        {% csrf_token %}
-
-                        <div style="max-width:470px;">
-                            <input type="file" placeholder="Picture" name="picture" />
-                        </div>
-
-                        <br>
-
-                        <div style="max-width:470px;">
-                            <input type="submit" class="btn btn-success btn-lg fa" value="Upload & Predict">
-                        </div>
-                    </form>
+                    <div class="card-body">
+                        <h3 class="card-title">Predict label for image</h3>
+                    </div>
                 </div>
 
                 <div class="card mt-4">
-                    <div class="card-body">
-                        <p>Path of image: {{ picture_url }}</p>
-                        <hr>
-                        <img src="{{ MEDIA_URL }}{{ picture_url }}" height="250" alt="No Image">
-                        <hr>
-                        <p>Predicted class: {{ label_predict }}</p>
-                        <hr>
-                        <p>Real name of class:</p>
-                        <h2><span class="badge badge-pill badge-danger">{{ real_label_name }}</span></h2>
+                    <form name="form" enctype="multipart/form-data" action="" method="POST">
+                        {% csrf_token %}
+                        <input type="file" placeholder="Picture" name="picture" onchange="form.submit()" />
+                    </form>
+
+                    <form name="" enctype="multipart/form-data" action="" method="GET">
+                        {% csrf_token %}
+                        <input type="submit" class="btn btn-success btn-lg fa" style="width:200px;" value="Predict">
+                    </form>
+                </div>
+
+
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="card mt-4">
+                            <div class="card-body">
+                                <p>Path of image: {{ picture_url }}</p>
+                                <p>Predicted class: {{ label_predict }}</p>
+                                <p>Real name of class:</p>
+                                <h2><span class="badge badge-pill badge-danger">{{ label_description }}</span></h2>
+                            </div>
+                        </div>
                     </div>
+
+                    <div class="col-sm-6">
+                        <div class="card mt-4">
+                            <div class="card-body">
+                                <img src="{{ picture_url }}" height="50%" width="100%" alt="No Image">
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
             </div>

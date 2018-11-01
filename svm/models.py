@@ -1,10 +1,12 @@
 from django.db import models
+from random import randint
 
 # Create your models here.
 
 
 class Label(models.Model):
     label_name = models.CharField(max_length=50)
+    description = models.CharField(max_length=100, null=True, default=None)
 
     def __str__(self):
         return self.label_name
@@ -25,10 +27,19 @@ class Image(models.Model):
     def __str__(self):
         return self.image_path
 
+    """get each label 1 random img, return list img related with label"""
+
+    def get_random_per_label(self):
+        images = []
+        labels = Label.objects.all()
+
+        for label in labels:
+            imgs = Image.objects.select_related(
+                'label').filter(label_id=label.id)
+            rand = randint(0, imgs.count()-1)
+            images.append(imgs[rand])
+        return images
+
+
 class Picture(models.Model):
-    picture = models.ImageField(upload_to='pictures')
-
-
-
-    
-    
+    picture = models.ImageField(upload_to='xuantoan/Data1/upload_pictures')

@@ -127,9 +127,11 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "static"),
 )
 
-MEDIA_ROOT = (
-BASE_DIR
-)
+# MEDIA_ROOT = (
+#     BASE_DIR
+# )
 
-MEDIA_URL = '/home/xuantoan/Django-project/neosite/'
+# MEDIA_URL = '/home/xuantoan/Django-project/neosite/'
 
+MEDIA_ROOT = '/media/'
+MEDIA_URL = '/media/'
