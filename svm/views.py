@@ -11,11 +11,11 @@ from .form import PictureUploadForm
 from django.template import RequestContext
 
 from . import myprocess as mp
-
+from . import models as md
+import numpy as np
+from django.conf import settings
 
 # Create your views here.
-
-my_dataset_path = '/media/xuantoan/Data1/CNTT/LV/Dataset/data-example'
 
 
 def index(request):
@@ -169,12 +169,16 @@ def upload_picture(request):
             picture = Picture.objects.filter().latest('id')
             picture_url = picture.picture.url
             des = mp.feature_extract(picture_url)
-            loaded_kmeans = mp.load_kmeans()
-            his = mp.create_histogram(des, loaded_kmeans)
-            loaded_svm = mp.load_svm()
+
+            dataset_name = get_name_dataset()
+            kmeans = mp.load_model_file(path_upload_file(
+                dataset_name + '-kmeans-25000.sav'))
+            his = mp.create_histogram(des, kmeans)
+            svm = mp.load_model_file(path_upload_file(
+                dataset_name + '-svm-25000.sav'))
 
             # cong 1 de giong voi index khi train tren jupyter
-            label_id = loaded_svm.predict(his.reshape(1, -1)) + 1
+            label_id = svm.predict(his.reshape(1, -1)) + 1
             label = Label.objects.get(id=label_id)
 
             context = {
@@ -196,9 +200,59 @@ def upload_picture(request):
 def show_picture(request):
     img = Image()
     imgs = img.get_random_per_label()
+    return render(request, 'svm/show_picture.html', locals())
 
-    context = {
-        'imgs': imgs,
-    }
 
-    return render(request, 'svm/show_picture.html', context)
+"""get name of dataset from path of 1 img"""
+
+
+def get_name_dataset():
+    if Image.objects.count() != 0:
+        image = Image.objects.filter().latest('id')
+        path = Path(image.image_path)
+        return path.parts[-4]
+    else:
+        raise ValueError('can not get data name, no image in data')
+
+
+"""build path to upload file"""
+
+
+def path_upload_file(file_name):
+    return Path(settings.MEDIA_ROOT + md.upload_dir) / file_name
+
+
+"""training process page"""
+
+
+def training(request):
+    dataset_name = get_name_dataset()
+
+    train_his = mp.load_npy_file(path_upload_file(
+        dataset_name + '-train-his-25000.npy'))
+    test_his = mp.load_npy_file(path_upload_file(
+        dataset_name + '-test-his-25000.npy'))
+
+    train_his = mp.scaling(train_his)
+    test_his = mp.scaling(test_his)
+
+    train_labels = mp.load_npy_file(
+        path_upload_file(dataset_name + '-train-labels.npy'))
+    test_labels = mp.load_npy_file(
+        path_upload_file(dataset_name + '-test-labels.npy'))
+
+    svm = mp.load_model_file(path_upload_file(dataset_name + '-svm-25000.sav'))
+
+    # svm = mp.train(train_his, train_labels)
+
+    accuracy, precision, recall = mp.metrics(svm, test_his, test_labels)
+
+    labels = Label.objects.all()
+
+    # build a dic {label description: [precision, recall]}
+    label_metrics = {}
+    for label in labels:
+        metrics = [precision[label.id - 1], recall[label.id - 1]]
+        label_metrics[label.description] = metrics
+
+    return render(request, 'svm/training.html', locals())

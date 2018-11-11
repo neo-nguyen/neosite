@@ -41,5 +41,11 @@ class Image(models.Model):
         return images
 
 
+upload_dir = 'xuantoan/Data1/upload_neosite'
+
+
 class Picture(models.Model):
-    picture = models.ImageField(upload_to='xuantoan/Data1/upload_pictures')
+    picture = models.ImageField(upload_to=upload_dir)
+
+    def get_upload_dir(self):
+        return self.picture.url

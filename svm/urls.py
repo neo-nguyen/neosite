@@ -3,7 +3,6 @@ from django.urls import path
 from svm import views
 
 
-
 urlpatterns = [
     path('', views.dataset_info, name='dataset_info'),
     path('create-labels/', views.create_labels, name='create_labels'),
@@ -12,6 +11,7 @@ urlpatterns = [
     path('dataset-info/', views.dataset_info, name='dataset_info'),
     path('upload/', views.upload_picture, name='upload_picture'),
     path('show-picture/', views.show_picture, name='show_picture'),
+    path('training/', views.training, name='training'),
+
 
 ]
-
