@@ -16,7 +16,7 @@
 
                 <div class="card mt-4">
                     <div class="card-body">
-                        <h3 class="card-title">Training SVM model</h3>
+                        <h3 class="card-title">Creating histograms for training, testing images</h3>
                     </div>
                 </div>
 
@@ -24,13 +24,12 @@
 
                 <div class="card mt-4">
                     <div class="card-body">
-                        {% if classifier %}
-                        <h4 class="card-title">SVM model: {{ classifier }}</h4>
+                        {% if train_his %}
+                        <h4 class="card-title">There are {{ train_his_len }} histograms from training set</h4>
                         {% endif %}
-                        {% if elapsed_time %}
-                        <h4 class="card-title">Elapsed time: {{ elapsed_time }}</h4>
+                        {% if test_his %}
+                        <h4 class="card-title">There are {{ test_his_len }} histograms from testing set</h4>
                         {% endif %}
-                        <p>{{train_labels}}</p>
                     </div>
                 </div>
 

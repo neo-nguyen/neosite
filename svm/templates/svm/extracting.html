@@ -16,7 +16,7 @@
 
                 <div class="card mt-4">
                     <div class="card-body">
-                        <h3 class="card-title">Training SVM model</h3>
+                        <h3 class="card-title">Feature extracting</h3>
                     </div>
                 </div>
 
@@ -24,13 +24,14 @@
 
                 <div class="card mt-4">
                     <div class="card-body">
-                        {% if classifier %}
-                        <h4 class="card-title">SVM model: {{ classifier }}</h4>
+                        {% if train_des %}
+                        <h4 class="card-title">There are {{ train_des_len }} descriptions from train set</h4>
+                        <h4 class="card-title">save to {{ train_path }}</h4>
                         {% endif %}
-                        {% if elapsed_time %}
-                        <h4 class="card-title">Elapsed time: {{ elapsed_time }}</h4>
+                        {% if test_des %}
+                        <h4 class="card-title">There are {{ test_des_len }} descriptions from test set</h4>
+                        <h4 class="card-title">save to {{ test_path }}</h4>
                         {% endif %}
-                        <p>{{train_labels}}</p>
                     </div>
                 </div>
 

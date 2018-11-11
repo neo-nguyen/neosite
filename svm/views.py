@@ -14,7 +14,8 @@ from . import myprocess as mp
 from . import models as md
 import numpy as np
 from django.conf import settings
-
+from sklearn import svm
+from sklearn.multiclass import OneVsRestClassifier
 # Create your views here.
 
 
@@ -133,67 +134,6 @@ def dataset_info(request):
     return render(request, 'svm/dataset_info.html', context)
 
 
-"""upload and predict for 1 img"""
-
-
-def upload_picture(request):
-    # save uploaded image by post method
-    if request.method == "POST":
-        Picture.objects.all().delete()
-        # Get the posted form
-        form = PictureUploadForm(request.POST, request.FILES)
-
-        if form.is_valid():
-            picture = Picture()
-            picture.picture = form.cleaned_data["picture"]
-            picture.save()
-
-        if Picture.objects.count() != 0:
-            picture = Picture.objects.filter().latest('id')
-            picture_url = picture.picture.url
-
-            context = {
-                'picture_url': picture_url,
-            }
-
-            return render(request, 'svm/upload_picture.html', context)
-        else:
-            return render(request, 'svm/upload_picture.html')
-
-    else:
-        form = PictureUploadForm()
-
-    # predict for 1 uploaded image by get method
-    if request.method == "GET":
-        if Picture.objects.count() != 0:
-            picture = Picture.objects.filter().latest('id')
-            picture_url = picture.picture.url
-            des = mp.feature_extract(picture_url)
-
-            dataset_name = get_name_dataset()
-            kmeans = mp.load_model_file(path_upload_file(
-                dataset_name + '-kmeans-25000.sav'))
-            his = mp.create_histogram(des, kmeans)
-            svm = mp.load_model_file(path_upload_file(
-                dataset_name + '-svm-25000.sav'))
-
-            # cong 1 de giong voi index khi train tren jupyter
-            label_id = svm.predict(his.reshape(1, -1)) + 1
-            label = Label.objects.get(id=label_id)
-
-            context = {
-                'picture_url': picture_url,
-                'label_predict': label.label_name,
-                'label_description': label.description,
-            }
-
-            Picture.objects.all().delete()
-
-            return render(request, 'svm/upload_picture.html', context)
-        else:
-            return render(request, 'svm/upload_picture.html')
-
-
 """show each class 1 random img"""
 
 
@@ -222,6 +162,96 @@ def path_upload_file(file_name):
     return Path(settings.MEDIA_ROOT + md.upload_dir) / file_name
 
 
+"""feature extract from list Image.objects
+return list des"""
+
+
+def feature_extracting(image_objs):
+    list_des = []
+    if len(image_objs) != 0:
+        for image in image_objs:
+            des = mp.feature_extract(image.image_path)
+            list_des.append(des)
+
+    return list_des
+
+
+"""feature extract from all img in DB
+save file des to upload_dir"""
+
+
+def extracting(request):
+    dataset_name = get_name_dataset()
+
+    if Image.objects.count() != 0:
+        train_imgs = Image.objects.filter(dataset_id=1)
+        train_des = feature_extracting(train_imgs)
+        train_path = path_upload_file(dataset_name + '-train-des.npy')
+        mp.save_npy_file(train_des, train_path)
+
+        test_imgs = Image.objects.filter(dataset_id=2)
+        test_des = feature_extracting(test_imgs)
+        test_path = path_upload_file(dataset_name + '-test-des.npy')
+        mp.save_npy_file(test_des, test_path)
+
+        train_des_len = len(train_des)
+        test_des_len = len(test_des)
+
+        creat_train_test_labels()
+    else:
+        raise ValueError('can not extract, no image in data')
+
+    return render(request, 'svm/extracting.html', locals())
+
+
+"""creating a visual vocabulary by kmeans from train des
+save kmeans model to upload_dir"""
+
+
+def vocabulary(request):
+    dataset_name = get_name_dataset()
+
+    train_des = mp.load_npy_file(
+        path_upload_file(dataset_name + '-train-des.npy'))
+    concate_train_des = mp.concate_f(train_des)
+
+    n_clusters = 100
+    cluster, elapsed_time = mp.clustering(concate_train_des, n_clusters)
+    cluster_path = path_upload_file(dataset_name + '-kmeans.sav')
+    mp.save_model_file(cluster, cluster_path)
+
+    return render(request, 'svm/vocabulary.html', locals())
+
+
+"""creating his by kmeans from train, test des
+save train, test his to upload_dir"""
+
+
+def histogram(request):
+    dataset_name = get_name_dataset()
+
+    train_des = mp.load_npy_file(
+        path_upload_file(dataset_name + '-train-des.npy'))
+    test_des = mp.load_npy_file(
+        path_upload_file(dataset_name + '-test-des.npy'))
+
+    cluster = mp.load_model_file(
+        path_upload_file(dataset_name + '-kmeans.sav'))
+
+    train_his = mp.create_histograms(train_des, cluster)
+    test_his = mp.create_histograms(test_des, cluster)
+
+    train_his_path = path_upload_file(dataset_name + '-train-his.npy')
+    mp.save_npy_file(train_his, train_his_path)
+    test_his_path = path_upload_file(dataset_name + '-test-his.npy')
+    mp.save_npy_file(test_his, test_his_path)
+
+    train_his_len = len(train_his)
+    test_his_len = len(test_his)
+
+    return render(request, 'svm/histogram.html', locals())
+
+
 """training process page"""
 
 
@@ -229,23 +259,34 @@ def training(request):
     dataset_name = get_name_dataset()
 
     train_his = mp.load_npy_file(path_upload_file(
-        dataset_name + '-train-his-25000.npy'))
-    test_his = mp.load_npy_file(path_upload_file(
-        dataset_name + '-test-his-25000.npy'))
-
+        dataset_name + '-train-his.npy'))
     train_his = mp.scaling(train_his)
-    test_his = mp.scaling(test_his)
 
     train_labels = mp.load_npy_file(
         path_upload_file(dataset_name + '-train-labels.npy'))
+
+    classifier, elapsed_time = mp.train(train_his, train_labels)
+    mp.save_model_file(classifier, path_upload_file(dataset_name + '-svm.sav'))
+
+    return render(request, 'svm/training.html', locals())
+
+
+"""evaluating model page"""
+
+
+def evaluating(request):
+    dataset_name = get_name_dataset()
+
+    test_his = mp.load_npy_file(path_upload_file(
+        dataset_name + '-test-his.npy'))
+    test_his = mp.scaling(test_his)
     test_labels = mp.load_npy_file(
         path_upload_file(dataset_name + '-test-labels.npy'))
 
-    svm = mp.load_model_file(path_upload_file(dataset_name + '-svm-25000.sav'))
+    classifier = mp.load_model_file(
+        path_upload_file(dataset_name + '-svm.sav'))
 
-    # svm = mp.train(train_his, train_labels)
-
-    accuracy, precision, recall = mp.metrics(svm, test_his, test_labels)
+    accuracy, precision, recall = mp.metrics(classifier, test_his, test_labels)
 
     labels = Label.objects.all()
 
@@ -255,4 +296,88 @@ def training(request):
         metrics = [precision[label.id - 1], recall[label.id - 1]]
         label_metrics[label.description] = metrics
 
-    return render(request, 'svm/training.html', locals())
+    return render(request, 'svm/evaluating.html', locals())
+
+
+"""creating list labels from list Image.obj"""
+
+
+def creat_list_labels(image_objs):
+    # tru 1 de giong voi index khi train tren jupyter
+    list_labels = [img.label_id - 1 for img in image_objs]
+    return list_labels
+
+
+def creat_train_test_labels():
+    if Image.objects.count() != 0:
+        dataset_name = get_name_dataset()
+
+        train_imgs = Image.objects.filter(dataset_id=1)
+        train_labels = creat_list_labels(train_imgs)
+        train_path = path_upload_file(dataset_name + '-train-labels.npy')
+        mp.save_npy_file(train_labels, train_path)
+
+        test_imgs = Image.objects.filter(dataset_id=2)
+        test_labels = creat_list_labels(test_imgs)
+        test_path = path_upload_file(dataset_name + '-test-labels.npy')
+        mp.save_npy_file(test_labels, test_path)
+    else:
+        raise ValueError('can not creat_train_test_labels, no image in data')
+
+
+"""upload and predict for 1 img"""
+
+
+def upload_picture(request):
+    # save uploaded image by post method
+    if request.method == "POST" and 'predict' not in request.POST:
+        Picture.objects.all().delete()
+        # Get the posted form
+        form = PictureUploadForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            picture = Picture()
+            picture.picture = form.cleaned_data["picture"]
+            picture.save()
+
+        if Picture.objects.count() != 0:
+            picture = Picture.objects.filter().latest('id')
+            picture_url = picture.picture.url
+
+            context = {
+                'picture_url': picture_url,
+            }
+
+            return render(request, 'svm/upload_picture.html', context)
+    else:
+        form = PictureUploadForm()
+
+    # predict for 1 uploaded image by get method
+    if request.method == "POST" and 'predict' in request.POST:
+        if Picture.objects.count() != 0:
+            picture = Picture.objects.filter().latest('id')
+            picture_url = picture.picture.url
+            des = mp.feature_extract(picture_url)
+
+            dataset_name = get_name_dataset()
+            kmeans = mp.load_model_file(path_upload_file(
+                dataset_name + '-kmeans.sav'))
+            his = mp.create_histogram(des, kmeans)
+            svm = mp.load_model_file(path_upload_file(
+                dataset_name + '-svm.sav'))
+
+            # cong 1 de giong voi index khi train tren jupyter
+            label_id = svm.predict(his.reshape(1, -1)) + 1
+            label = Label.objects.get(id=label_id)
+
+            context = {
+                'picture_url': picture_url,
+                'label_predict': label.label_name,
+                'label_description': label.description,
+            }
+
+            Picture.objects.all().delete()
+
+            return render(request, 'svm/upload_picture.html', context)
+
+    return render(request, 'svm/upload_picture.html')

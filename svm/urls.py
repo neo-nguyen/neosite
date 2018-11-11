@@ -11,7 +11,12 @@ urlpatterns = [
     path('dataset-info/', views.dataset_info, name='dataset_info'),
     path('upload/', views.upload_picture, name='upload_picture'),
     path('show-picture/', views.show_picture, name='show_picture'),
+    path('evaluating/', views.evaluating, name='evaluating'),
+    path('extracting/', views.extracting, name='extracting'),
+    path('vocabulary/', views.vocabulary, name='vocabulary'),
+    path('histogram/', views.histogram, name='histogram'),
     path('training/', views.training, name='training'),
+
 
 
 ]

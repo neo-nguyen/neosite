@@ -1,5 +1,7 @@
 from django.db import models
 from random import randint
+from pathlib import Path
+from django import db
 
 # Create your models here.
 
@@ -40,8 +42,10 @@ class Image(models.Model):
             images.append(imgs[rand])
         return images
 
+db_path = db.utils.settings.DATABASES['default']['NAME']
+db_name = Path(db_path).parts[-1]
+upload_dir = 'xuantoan/Data1/upload_neosite/' + db_name
 
-upload_dir = 'xuantoan/Data1/upload_neosite'
 
 
 class Picture(models.Model):

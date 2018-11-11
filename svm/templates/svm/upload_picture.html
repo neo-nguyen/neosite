@@ -38,9 +38,9 @@
                         <input type="file" placeholder="Picture" name="picture" onchange="form.submit()" />
                     </form>
 
-                    <form name="" enctype="multipart/form-data" action="" method="GET">
+                    <form name="" enctype="multipart/form-data" action="" method="POST">
                         {% csrf_token %}
-                        <input type="submit" class="btn btn-success btn-lg fa" style="width:200px;" value="Predict">
+                        <input type="submit" name="predict" class="btn btn-success btn-lg fa" style="width:200px;" value="Predict">
                     </form>
                 </div>
 
