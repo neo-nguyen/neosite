@@ -15,7 +15,7 @@ from . import models as md
 import numpy as np
 from django.conf import settings
 from sklearn import svm
-from sklearn.multiclass import OneVsRestClassifier
+
 # Create your views here.
 
 
@@ -32,8 +32,15 @@ def create_labels(dataset_path):
     subdirs = [subdir for subdir in train_dir.iterdir() if subdir.is_dir()]
     if subdirs:
         Label.objects.all().delete()
+        label_names = []
+
         for subdir in subdirs:
             label_name = subdir.parts[-1]
+            label_names.append(label_name)
+
+        label_names.sort()
+
+        for label_name in label_names:
             label = Label(label_name=label_name)
             label.save()
 
@@ -74,7 +81,10 @@ def create_images(dataset_path):
     Image.objects.all().delete()
 
     img_paths = get_file_paths(dataset_path, '.png .jpg .jpeg .JPEG .JPG')
+
     if img_paths:
+        img_paths.sort()
+
         for img_path in img_paths:
             # #get dataset id
             dts_name = img_path.parts[-3]
@@ -119,10 +129,10 @@ def dataset_info(request):
     # return list[label and count images by label]
     image_count = Label.objects.annotate(num_images=Count('image'))
 
-    # build a dic {label name: num image}
+    # build a dic image_count_by_label {label name: num image}
     image_count_by_label = {}
     for i in range(len(image_count)):
-        image_count_by_label[image_count[i].description] = image_count[i].num_images
+        image_count_by_label[image_count[i].label_name] = image_count[i].num_images
 
     context = {
         'labels': labels,
@@ -197,6 +207,7 @@ def extracting(request):
         train_des_len = len(train_des)
         test_des_len = len(test_des)
 
+        # creat train, test labels
         creat_train_test_labels()
     else:
         raise ValueError('can not extract, no image in data')
@@ -215,7 +226,7 @@ def vocabulary(request):
         path_upload_file(dataset_name + '-train-des.npy'))
     concate_train_des = mp.concate_f(train_des)
 
-    n_clusters = 100
+    n_clusters = 900
     cluster, elapsed_time = mp.clustering(concate_train_des, n_clusters)
     cluster_path = path_upload_file(dataset_name + '-kmeans.sav')
     mp.save_model_file(cluster, cluster_path)
@@ -280,6 +291,7 @@ def evaluating(request):
     test_his = mp.load_npy_file(path_upload_file(
         dataset_name + '-test-his.npy'))
     test_his = mp.scaling(test_his)
+
     test_labels = mp.load_npy_file(
         path_upload_file(dataset_name + '-test-labels.npy'))
 
@@ -290,11 +302,13 @@ def evaluating(request):
 
     labels = Label.objects.all()
 
-    # build a dic {label description: [precision, recall]}
+    # ????????????????????????????????????????????????????????????
+    # build a dic {label name: [precision, recall]}
+
     label_metrics = {}
     for label in labels:
         metrics = [precision[label.id - 1], recall[label.id - 1]]
-        label_metrics[label.description] = metrics
+        label_metrics[label.label_name] = metrics
 
     return render(request, 'svm/evaluating.html', locals())
 
@@ -303,8 +317,8 @@ def evaluating(request):
 
 
 def creat_list_labels(image_objs):
-    # tru 1 de giong voi index khi train tren jupyter
-    list_labels = [img.label_id - 1 for img in image_objs]
+    # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$tru 1 de giong voi index khi train tren jupyter
+    list_labels = [img.label_id for img in image_objs]
     return list_labels
 
 
@@ -366,8 +380,8 @@ def upload_picture(request):
             svm = mp.load_model_file(path_upload_file(
                 dataset_name + '-svm.sav'))
 
-            # cong 1 de giong voi index khi train tren jupyter
-            label_id = svm.predict(his.reshape(1, -1)) + 1
+            # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$4cong 1 de giong voi index khi train tren jupyter
+            label_id = svm.predict(his.reshape(1, -1))
             label = Label.objects.get(id=label_id)
 
             context = {

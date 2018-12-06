@@ -16,7 +16,7 @@
 
                 <div class="card mt-4">
                     <div class="card-body">
-                        <h3 class="card-title">Training</h3>
+                        <h3 class="card-title">Evaluating</h3>
                     </div>
                 </div>
 
@@ -39,9 +39,9 @@
                         </thead>
 
                         <tbody>
-                            {% for label_description, metrics in label_metrics.items %}
+                            {% for label_name, metrics in label_metrics.items %}
                             <tr>
-                                <td>{{ label_description }}</td>
+                                <td>{{ label_name }}</td>
                                 {% for metric in metrics %}
                                 <td>{{ metric }}</td>
                                 {% endfor %}

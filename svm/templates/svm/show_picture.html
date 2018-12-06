@@ -36,10 +36,10 @@
                     {% for img in imgs %}
                     <div class="col-sm-3">
                         <div class="card">
-                            <img class="card-img-top-rounded" style="width:auto;height:120px;" src="{{ img.image_path }}"
+                            <img class="card-img-top-rounded" style="width:100px;height:100px;" src="{{ img.image_path }}"
                                 alt="Card image cap">
                             <div class="card-body">
-                                <p class="card-text">{{ img.label.description }}</p>
+                                <p class="card-text">{{ img.label.label_name }}</p>
                             </div>
                         </div>
                         <br>

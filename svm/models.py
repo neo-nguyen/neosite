@@ -42,10 +42,15 @@ class Image(models.Model):
             images.append(imgs[rand])
         return images
 
+
+"""get database path from app"""
+
 db_path = db.utils.settings.DATABASES['default']['NAME']
+
+"""get database name and create a upload folder with this name in local computer"""
+
 db_name = Path(db_path).parts[-1]
 upload_dir = 'xuantoan/Data1/upload_neosite/' + db_name
-
 
 
 class Picture(models.Model):

@@ -74,7 +74,7 @@ WSGI_APPLICATION = 'neosite.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'imagenet-v2-300.sqlite3'),
+        'NAME': os.path.join(BASE_DIR, 'fruits-v5.sqlite3'),
     }
 }
 

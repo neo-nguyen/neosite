@@ -46,21 +46,21 @@
 
 
                 <div class="row">
-                    <div class="col-sm-4">
+                    <div class="col-sm-8">
                         <div class="card mt-4">
                             <div class="card-body">
                                 <p>Path of image: {{ picture_url }}</p>
                                 <p>Predicted class: {{ label_predict }}</p>
                                 <p>Real name of class:</p>
-                                <h2><span class="badge badge-pill badge-danger">{{ label_description }}</span></h2>
+                                <h2><span class="badge badge-pill badge-danger">{{ label_predict }}</span></h2>
                             </div>
                         </div>
                     </div>
 
-                    <div class="col-sm-8">
+                    <div class="col-sm-4">
                         <div class="card mt-4">
                             <div class="card-body">
-                                <img src="{{ picture_url }}" height="50%" width="100%" alt="No Image">
+                                <img src="{{ picture_url }}" height="200px" width="100%" alt="No Image">
                             </div>
                         </div>
                     </div>

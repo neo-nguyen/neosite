@@ -87,7 +87,7 @@ def load_model_file(path):
         raise ValueError('can not get training model file')
 
 
-"""load model training from disk"""
+"""save model training from disk"""
 
 
 def save_model_file(model, path):
@@ -137,9 +137,9 @@ def metrics(svm, X_test, Y_test):
 
     # round metrics
     decimal_num = 4
-    accuracy = round(accuracy, decimal_num)
-    precision = [round(pre, decimal_num) for pre in precision]
-    recall = [round(rec, decimal_num) for rec in recall]
+    accuracy = round(accuracy*100, decimal_num)
+    precision = [round(pre*100, decimal_num) for pre in precision]
+    recall = [round(rec*100, decimal_num) for rec in recall]
 
     return accuracy, precision, recall
 
@@ -149,10 +149,7 @@ return svm, elapsed_time"""
 
 
 def train(X_train, Y_train):
-    # classifier = OneVsRestClassifier(svm.LinearSVC())
-
     classifier = svm.LinearSVC()
-
     # classifier = SVC(kernel='rbf', random_state=0, gamma=.001, C=100)
 
     t = time.process_time()
